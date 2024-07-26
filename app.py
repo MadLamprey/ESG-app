@@ -227,9 +227,9 @@ def fetch_trending_news(stocks):
     news = sorted(news, key=lambda x: x['publishedAt'], reverse=True)
     return news
 
-def fetch_data(dashboard_agent_runtime_client):
+def fetch_data(dashboard_agent_runtime_client, inputText="What is my portfolio?"):
     response = dashboard_agent_runtime_client.invoke_agent(
-        inputText="Get my portfolio",
+        inputText=inputText,
         agentId='O7WDUFVTUK',
         agentAliasId='TEYUNEU0XC',
         sessionId='1234'
@@ -271,7 +271,7 @@ def portfolio_page():
         prompt = st.chat_input("What is up?")
         if prompt:
             dashboard_agent_runtime_client = boto3.client('bedrock-agent-runtime', region_name='us-east-1', aws_access_key_id='AKIAQ3EGSKIHRPD4V56K', aws_secret_access_key='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')
-            response = json.loads(fetch_data(dashboard_agent_runtime_client))
+            response = json.loads(fetch_data(dashboard_agent_runtime_client, prompt))
             
             stocks = list(map(lambda n: n['company'], response['individual_companies']))
             e_scores = list(map(lambda n: round(n['environmental_score']), response['individual_companies']))
