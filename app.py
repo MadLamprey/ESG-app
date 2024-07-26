@@ -354,7 +354,7 @@ def portfolio_page(curr_score, prev_score):
             st.markdown(news_bar, unsafe_allow_html=True)
 
 def main():
-    st.set_page_config(page_title="ESG Edge", layout="centered", initial_sidebar_state="collapsed")
+    st.set_page_config(page_title="ESG Edge", layout="centered", initial_sidebar_state="collapsed", theme="dark")
     set_background("./images/wallpaper.jpeg")
     set_styles()
 
