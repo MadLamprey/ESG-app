@@ -1,1 +1,5 @@
 streamlit
+newsapi-python
+altair
+boto3
+streamlit_option_menu

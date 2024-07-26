@@ -1,5 +1,6 @@
 import streamlit as st
 import altair as alt
+import boto3
 import base64
 import random
 from datetime import datetime
@@ -8,6 +9,7 @@ from streamlit_option_menu import option_menu
 
 # Initialize News API client
 newsapi = NewsApiClient(api_key='172888f1419444b7aa01139b6309fad8')
+boto3.setup_default_session(region_name='us-east-1')
 
 def get_base64(bin_file):
     with open(bin_file, 'rb') as f:
@@ -352,12 +354,12 @@ def portfolio_page(curr_score, prev_score):
             st.markdown(news_bar, unsafe_allow_html=True)
 
 def main():
-    st.set_page_config(page_title="ESG Analyzer", layout="centered", initial_sidebar_state="collapsed")
+    st.set_page_config(page_title="ESG Edge", layout="centered", initial_sidebar_state="collapsed")
     set_background("./images/wallpaper.jpeg")
     set_styles()
 
     with st.sidebar:
-        st.sidebar.title("ESG Analyzer")
+        st.sidebar.title("ESG Edge", )
         selection = option_menu(
             menu_title=None,
             options=["Home", "My Portfolio"],
