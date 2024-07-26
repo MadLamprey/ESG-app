@@ -428,7 +428,7 @@ def main():
     st.set_page_config(page_title="ESG Edge", layout="centered", initial_sidebar_state="collapsed")
     set_background("./images/wallpaper.jpeg")
     set_styles()
-    res = json.dumps(st.session_state, indent=4)
+    res = json.dumps({'test': 1}, indent=4)
     print(res)
 
     with st.sidebar:
