@@ -9,7 +9,10 @@ from streamlit_option_menu import option_menu
 
 # Initialize News API client
 newsapi = NewsApiClient(api_key='172888f1419444b7aa01139b6309fad8')
-boto3.setup_default_session(region_name='us-east-1')
+session = boto3.session.Session('us-east-1')
+bedrock_agent_client = boto3.client('bedrock-agent', region_name='us-east-1')
+bedrock_agent_runtime_client = boto3.client('bedrock-agent-runtime', region_name='us-east-1', aws_access_key_id='AKIAQ3EGSKIHRPD4V56K', aws_secret_access_key='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')
+
 
 def get_base64(bin_file):
     with open(bin_file, 'rb') as f:
@@ -137,6 +140,26 @@ def set_styles():
     )
 
 def fetch_answer(question):
+    response = bedrock_agent_runtime_client.invoke_agent(
+        inputText=question,
+        agentId='78GAXQITLL',
+        agentAliasId='6ZXSBNSZGR',
+        sessionId='1234'
+    )
+    final_answer = None
+    event_stream = response['completion']
+    try:
+        for event in event_stream:
+            if 'chunk' in event:
+                data = event['chunk']['bytes']
+                final_answer = data.decode('utf8')
+                print(final_answer[:final_answer.find('<sources>')])
+            elif 'trace' in event:
+                print(event['trace'])
+            else: 
+                raise Exception("unexpected event.", event)
+    except Exception as e:
+        raise Exception("unexpected event.",e)
     prev_esg_score = random.randint(0, 100)
     evaluated_esg_score = random.randint(0, 100)
     analysis = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam nec purus nec nunc tincidunt aliquam. Nullam nec purus nec nunc tincidunt aliquam. Nullam nec purus nec nunc tincidunt aliquam. Nullam nec purus nec nunc tincidunt aliquam."
@@ -147,7 +170,7 @@ def fetch_answer(question):
     elif evaluated_esg_score < prev_esg_score:
         arrow_class = "down"
 
-    return prev_esg_score, evaluated_esg_score, analysis, arrow_class
+    return prev_esg_score, evaluated_esg_score, analysis, arrow_class, final_answer
 
 def main_page():
     title = f"<h1 class='header'>Trailblazers ESG Analyzer</h1></br><p class='desc'>Gain comprehensive ESG insights for companies that you are interested in, empowering you to make informed decisions. Start a chat below to learn more!</p></br>"
@@ -180,7 +203,7 @@ def main_page():
     if prompt:
         question = prompt
         st.session_state.messages.append({"role": "user", "content": question})
-        prev_score, new_score, analysis, arrow_class = fetch_answer(question)
+        prev_score, new_score, analysis, arrow_class, final_answer = fetch_answer(question)
         arrow_html = f"<i class='arrow {arrow_class}'></i>" if arrow_class else ""
         answer = f"""
         <div style="margin-top: 10px;">
@@ -191,13 +214,15 @@ def main_page():
             <p><strong>Analysis:</strong> {analysis}</p>
         </div>
         """
-        st.session_state.messages.append({"role": "assistant", "content": answer})
+        st.session_state.messages.append({"role": "assistant", "content": final_answer})
 
         col1, col2 = st.columns([2, 2])
         with col1:
             st.markdown(f"<div class='stChatMessage'>{question}</div>", unsafe_allow_html=True)
         with col2:
-            st.markdown(f"<div class='stChatMessage'>{answer}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='stChatMessage'>{final_answer}</div>", unsafe_allow_html=True)
+        
+        st.markdown("<script>scrollToBottom();</script>", unsafe_allow_html=True)
 
     if uploaded_files:
         uploaded_file_names = [uploaded_file.name for uploaded_file in uploaded_files]
