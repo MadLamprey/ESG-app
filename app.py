@@ -270,7 +270,10 @@ def portfolio_page():
     prompt = st.chat_input("What is up?")
     if prompt:
         dashboard_agent_runtime_client = boto3.client('bedrock-agent-runtime', region_name='us-east-1', aws_access_key_id='AKIAQ3EGSKIHRPD4V56K', aws_secret_access_key='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')
-        response = json.loads(fetch_data(dashboard_agent_runtime_client))
+        try:
+            response = json.loads(fetch_data(dashboard_agent_runtime_client))
+        except Exception as e:
+            print(e)
         stocks = list(map(lambda n: n['company'], response['individual_companies']))
         e_scores = list(map(lambda n: round(n['environmental_score']), response['individual_companies']))
         s_scores = list(map(lambda n: round(n['social_score']), response['individual_companies']))
