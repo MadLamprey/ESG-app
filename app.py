@@ -445,9 +445,9 @@ def main():
             default_index=0
         )
 
-    if selection == "Home":
+    if selection == "Edge Chat":
         main_page()
-    elif selection == "My Portfolio":
+    elif selection == "Edge Dashboard":
         portfolio_page()
 
 if __name__ == "__main__":
