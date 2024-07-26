@@ -9,7 +9,7 @@ from newsapi import NewsApiClient
 from streamlit_option_menu import option_menu
 
 # Initialize News API client
-newsapi = NewsApiClient(api_key='172888f1419444b7aa01139b6309fad8')
+newsapi = NewsApiClient(api_key='449d276efdec4379911e49ee9355a651')
 session = boto3.session.Session('us-east-1')
 bedrock_agent_client = boto3.client('bedrock-agent', region_name='us-east-1')
 bedrock_agent_runtime_client = boto3.client('bedrock-agent-runtime', region_name='us-east-1', aws_access_key_id='AKIAQ3EGSKIHRPD4V56K', aws_secret_access_key='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')
@@ -252,6 +252,9 @@ def fetch_data(dashboard_agent_runtime_client, inputText="What is my portfolio?"
 
 def portfolio_page():
     try:
+        title = f"<h1 class='header'>My Portfolio</h1></br>"
+        st.write(title, unsafe_allow_html=True)
+        st.divider()
         response = None
         stocks = ['Disney', 'Apple', 'Tesla', 'Microsoft']
         e_scores = [random.randint(0, 100) for _ in range(4)]
@@ -271,160 +274,160 @@ def portfolio_page():
         prompt = st.chat_input("What is up?")
         if prompt:
             dashboard_agent_runtime_client = boto3.client('bedrock-agent-runtime', region_name='us-east-1', aws_access_key_id='AKIAQ3EGSKIHRPD4V56K', aws_secret_access_key='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')
-            response = json.loads(fetch_data(dashboard_agent_runtime_client, prompt))
-            
-            stocks = list(map(lambda n: n['company'], response['individual_companies']))
-            e_scores = list(map(lambda n: round(n['environmental_score']), response['individual_companies']))
-            s_scores = list(map(lambda n: round(n['social_score']), response['individual_companies']))
-            g_scores = list(map(lambda n: round(n['governance_score']), response['individual_companies']))
-            overall_e_score = response['portfolio']['environmental_score']
-            overall_s_score = response['portfolio']['social_score']
-            overall_g_score = response['portfolio']['governance_score']
+            response = fetch_data(dashboard_agent_runtime_client, prompt)
+            if response.startswith('{'):
+                response = json.loads(response)
+                stocks = list(map(lambda n: n['company'], response['individual_companies']))
+                e_scores = list(map(lambda n: round(n['environmental_score']), response['individual_companies']))
+                s_scores = list(map(lambda n: round(n['social_score']), response['individual_companies']))
+                g_scores = list(map(lambda n: round(n['governance_score']), response['individual_companies']))
+                overall_e_score = response['portfolio']['environmental_score']
+                overall_s_score = response['portfolio']['social_score']
+                overall_g_score = response['portfolio']['governance_score']
 
-        title = f"<h1 class='header'>My Portfolio</h1></br>"
-        st.write(title, unsafe_allow_html=True)
-        st.divider()
-        cols = st.columns([1, 5, 1, 5, 1, 5])
-        with cols[0]:
-            st.markdown(
-                '''
-                    <div class="divider-vertical-line"></div>
-                    <style>
-                        .divider-vertical-line {
-                            border-right: 2px solid white;
-                            height: 320px;
-                            margin: auto;
-                        }
-                    </style>
-                ''',
-                unsafe_allow_html=True
-            )
-        with cols[1]:
-            if st.session_state.res_e:
-                cols[1].metric("Environment", overall_e_score, overall_e_score - st.session_state.res_e)
+                cols = st.columns([1, 5, 1, 5, 1, 5])
+                with cols[0]:
+                    st.markdown(
+                        '''
+                            <div class="divider-vertical-line"></div>
+                            <style>
+                                .divider-vertical-line {
+                                    border-right: 2px solid white;
+                                    height: 320px;
+                                    margin: auto;
+                                }
+                            </style>
+                        ''',
+                        unsafe_allow_html=True
+                    )
+                with cols[1]:
+                    if st.session_state.res_e:
+                        cols[1].metric("Environment", overall_e_score, overall_e_score - st.session_state.res_e)
+                    else:
+                        cols[1].metric("Environment", overall_e_score)
+                        st.session_state.res_e = overall_e_score
+                with cols[2]:
+                    st.markdown(
+                        '''
+                            <div class="divider-vertical-line"></div>
+                            <style>
+                                .divider-vertical-line {
+                                    border-right: 2px solid white;
+                                    height: 320px;
+                                    margin: auto;
+                                }
+                            </style>
+                        ''',
+                        unsafe_allow_html=True
+                    )
+                with cols[3]:
+                    if st.session_state.res_s:
+                        cols[3].metric("Social", overall_s_score, overall_s_score - st.session_state.res_s)
+                    else:
+                        cols[3].metric("Social", overall_s_score)
+                        st.session_state.res_s = overall_s_score
+                with cols[4]:
+                    st.markdown(
+                        '''
+                            <div class="divider-vertical-line"></div>
+                            <style>
+                                .divider-vertical-line {
+                                    border-right: 2px solid white;
+                                    height: 90px;
+                                    margin: auto;
+                                }
+                            </style>
+                        ''',
+                        unsafe_allow_html=True
+                    )
+                with cols[5]:
+                    if st.session_state.res_g:
+                        cols[5].metric("Governance", overall_g_score, overall_g_score - st.session_state.res_g)
+                    else:
+                        cols[5].metric("Governance", overall_g_score)
+                        st.session_state.res_g = overall_g_score
+                
+                st.divider()
+
+                data = {
+                    "Stocks": stocks,
+                    "Environment": e_scores,
+                    "Social": s_scores,
+                    "Governance": g_scores
+                }
+
+                if "data" not in st.session_state:
+                    st.session_state.data = data
+
+                cols = st.columns([5, 1, 5])
+                with cols[0]:
+                    st.table(data)
+
+                    source = alt.pd.DataFrame(data)
+                    bars_e = alt.Chart(source).mark_bar().encode(
+                        x='Stocks',
+                        y='Environment'
+                    ).properties(
+                        title="Environment",
+                        background="transparent",
+                        height=200
+                    ).configure_axis(disable=True)
+                    bars_s = alt.Chart(source).mark_bar().encode(
+                        x='Stocks',
+                        y='Social'
+                    ).properties(
+                        title="Social",
+                        background="transparent",
+                        height=200
+                    ).configure_axis(disable=True)
+                    bars_g = alt.Chart(source).mark_bar().encode(
+                        x='Stocks',
+                        y='Governance'
+                    ).properties(
+                        title="Governance",
+                        background="transparent",
+                        height=200
+                    ).configure_axis(disable=True)
+
+                    cols1 = st.columns(3)
+                    with cols1[0]:
+                        st.altair_chart(bars_e, use_container_width=True, theme=None)
+                    with cols1[1]:
+                        st.altair_chart(bars_s, use_container_width=True, theme=None)
+                    with cols1[2]:
+                        st.altair_chart(bars_g, use_container_width=True, theme=None)
+                
+                with cols[1]:
+                    st.markdown(
+                        '''
+                            <div class="divider-vertical"></div>
+                            <style>
+                                .divider-vertical {
+                                    border-right: 2px solid white;
+                                    height: 460px;
+                                    margin: auto;
+                                }
+                            </style>
+                        ''',
+                        unsafe_allow_html=True
+                    )
+                    
+                with cols[2]:
+                        news = fetch_trending_news(stocks)
+                        news_bar = "<div class='news'><div class='news-header'>Trending News</div>"
+                        news_html = ""
+                        for article in news:
+                            news_html += f"""
+                                <div class="news-item">
+                                    <a href="{article['url']}" target="_blank"><strong>{article['title'][:50]}</strong></a><br>
+                                    <small>{article['source']} - {datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ').strftime("%H:%M %d/%m/%Y")}</small>
+                                </div><hr class="thin-divider">"""
+                        news_bar += '<div class="news-bar">'
+                        news_bar += news_html
+                        news_bar += "</div></div>"
+                        st.markdown(news_bar, unsafe_allow_html=True)
             else:
-                cols[1].metric("Environment", overall_e_score)
-                st.session_state.res_e = overall_e_score
-        with cols[2]:
-            st.markdown(
-                '''
-                    <div class="divider-vertical-line"></div>
-                    <style>
-                        .divider-vertical-line {
-                            border-right: 2px solid white;
-                            height: 320px;
-                            margin: auto;
-                        }
-                    </style>
-                ''',
-                unsafe_allow_html=True
-            )
-        with cols[3]:
-            if st.session_state.res_s:
-                cols[3].metric("Social", overall_s_score, overall_s_score - st.session_state.res_s)
-            else:
-                cols[3].metric("Social", overall_s_score)
-                st.session_state.res_s = overall_s_score
-        with cols[4]:
-            st.markdown(
-                '''
-                    <div class="divider-vertical-line"></div>
-                    <style>
-                        .divider-vertical-line {
-                            border-right: 2px solid white;
-                            height: 90px;
-                            margin: auto;
-                        }
-                    </style>
-                ''',
-                unsafe_allow_html=True
-            )
-        with cols[5]:
-            if st.session_state.res_g:
-                cols[5].metric("Governance", overall_g_score, overall_g_score - st.session_state.res_g)
-            else:
-                cols[5].metric("Governance", overall_g_score)
-                st.session_state.res_g = overall_g_score
-        
-        st.divider()
-
-        data = {
-            "Stocks": stocks,
-            "Environment": e_scores,
-            "Social": s_scores,
-            "Governance": g_scores
-        }
-
-        if "data" not in st.session_state:
-            st.session_state.data = data
-
-        cols = st.columns([5, 1, 5])
-        with cols[0]:
-            st.table(data)
-
-            source = alt.pd.DataFrame(data)
-            bars_e = alt.Chart(source).mark_bar().encode(
-                x='Stocks',
-                y='Environment'
-            ).properties(
-                title="Environment",
-                background="transparent",
-                height=200
-            ).configure_axis(disable=True)
-            bars_s = alt.Chart(source).mark_bar().encode(
-                x='Stocks',
-                y='Social'
-            ).properties(
-                title="Social",
-                background="transparent",
-                height=200
-            ).configure_axis(disable=True)
-            bars_g = alt.Chart(source).mark_bar().encode(
-                x='Stocks',
-                y='Governance'
-            ).properties(
-                title="Governance",
-                background="transparent",
-                height=200
-            ).configure_axis(disable=True)
-
-            cols1 = st.columns(3)
-            with cols1[0]:
-                st.altair_chart(bars_e, use_container_width=True, theme=None)
-            with cols1[1]:
-                st.altair_chart(bars_s, use_container_width=True, theme=None)
-            with cols1[2]:
-                st.altair_chart(bars_g, use_container_width=True, theme=None)
-        
-        with cols[1]:
-            st.markdown(
-                '''
-                    <div class="divider-vertical"></div>
-                    <style>
-                        .divider-vertical {
-                            border-right: 2px solid white;
-                            height: 460px;
-                            margin: auto;
-                        }
-                    </style>
-                ''',
-                unsafe_allow_html=True
-            )
-            
-        with cols[2]:
-                news = fetch_trending_news(stocks)
-                news_bar = "<div class='news'><div class='news-header'>Trending News</div>"
-                news_html = ""
-                for article in news:
-                    news_html += f"""
-                        <div class="news-item">
-                            <a href="{article['url']}" target="_blank"><strong>{article['title'][:50]}</strong></a><br>
-                            <small>{article['source']} - {datetime.strptime(article['publishedAt'], '%Y-%m-%dT%H:%M:%SZ').strftime("%H:%M %d/%m/%Y")}</small>
-                        </div><hr class="thin-divider">"""
-                news_bar += '<div class="news-bar">'
-                news_bar += news_html
-                news_bar += "</div></div>"
-                st.markdown(news_bar, unsafe_allow_html=True)
+                st.markdown(f"<div class='stChatMessage'>{response}</div>", unsafe_allow_html=True)
     except Exception as e:
         print(e)
 
@@ -432,8 +435,6 @@ def main():
     st.set_page_config(page_title="ESG Edge", layout="centered", initial_sidebar_state="collapsed")
     set_background("./images/wallpaper.jpeg")
     set_styles()
-    res = json.dumps({'test': 1}, indent=4)
-    print(res)
 
     with st.sidebar:
         st.sidebar.title("ESG Edge", )
