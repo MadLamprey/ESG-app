@@ -231,7 +231,7 @@ def fetch_data(dashboard_agent_runtime_client, inputText="What is my portfolio?"
     response = dashboard_agent_runtime_client.invoke_agent(
         inputText=inputText,
         agentId='O7WDUFVTUK',
-        agentAliasId='TEYUNEU0XC',
+        agentAliasId='NQG3BAGGZJ',
         sessionId='1234'
     )
     event_stream = response['completion']
@@ -440,7 +440,7 @@ def main():
         st.sidebar.title("ESG Edge", )
         selection = option_menu(
             menu_title=None,
-            options=["Home", "My Portfolio"],
+            options=["Edge Chat", "Edge Dashboard"],
             icons=["chat", "graph-up"],
             default_index=0
         )
