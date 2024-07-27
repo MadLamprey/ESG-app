@@ -302,7 +302,7 @@ def portfolio_page():
                     )
                 with cols[1]:
                     if st.session_state.res_e:
-                        cols[1].metric("Environment", overall_e_score, overall_e_score - st.session_state.res_e)
+                        cols[1].metric("Environment", overall_e_score, overall_e_score - st.session_state.res_e, delta_color="inverse")
                     else:
                         cols[1].metric("Environment", overall_e_score)
                         st.session_state.res_e = overall_e_score
@@ -322,7 +322,7 @@ def portfolio_page():
                     )
                 with cols[3]:
                     if st.session_state.res_s:
-                        cols[3].metric("Social", overall_s_score, overall_s_score - st.session_state.res_s)
+                        cols[3].metric("Social", overall_s_score, overall_s_score - st.session_state.res_s, delta_color="inverse")
                     else:
                         cols[3].metric("Social", overall_s_score)
                         st.session_state.res_s = overall_s_score
@@ -342,7 +342,7 @@ def portfolio_page():
                     )
                 with cols[5]:
                     if st.session_state.res_g:
-                        cols[5].metric("Governance", overall_g_score, overall_g_score - st.session_state.res_g)
+                        cols[5].metric("Governance", overall_g_score, overall_g_score - st.session_state.res_g, delta_color="inverse")
                     else:
                         cols[5].metric("Governance", overall_g_score)
                         st.session_state.res_g = overall_g_score
